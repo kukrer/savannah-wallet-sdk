@@ -1,10 +1,13 @@
 import * as bip32 from 'bip32';
-import { getPreferredHRP } from 'avalanche/dist/utils';
+import { getPreferredHRP } from '@savannah-labs/savannahjs/dist/utils';
 import { activeNetwork, avalanche, pChain, xChain } from '@/Network/network';
-import { KeyPair as AVMKeyPair, KeyChain as AVMKeyChain } from 'avalanche/dist/apis/avm/keychain';
-import { KeyChain as PlatformKeyChain, KeyPair as PlatformKeyPair } from 'avalanche/dist/apis/platformvm';
+import { KeyPair as AVMKeyPair, KeyChain as AVMKeyChain } from '@savannah-labs/savannahjs/dist/apis/avm/keychain';
+import {
+    KeyChain as PlatformKeyChain,
+    KeyPair as PlatformKeyPair,
+} from '@savannah-labs/savannahjs/dist/apis/platformvm';
 import { HdChainType } from './types';
-import { Buffer } from 'avalanche';
+import { Buffer } from '@savannah-labs/savannahjs';
 import {
     DERIVATION_SLEEP_INTERVAL,
     HD_SCAN_GAP_SIZE,

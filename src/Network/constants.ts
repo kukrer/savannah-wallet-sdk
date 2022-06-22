@@ -1,5 +1,5 @@
 import { NetworkConfig } from './types';
-import { Defaults } from 'avalanche/dist/utils';
+import { Defaults } from '@savannah-labs/savannahjs/dist/utils';
 import { getRpcC, getRpcP, getRpcX } from './helpers/rpcFromConfig';
 
 export const MainnetConfig: NetworkConfig = {

@@ -1,8 +1,8 @@
 import { WalletProvider } from '@/Wallet/Wallet';
 import { HdScanner } from '@/Wallet/HdScanner';
-import { UTXOSet as AVMUTXOSet } from 'avalanche/dist/apis/avm/utxos';
+import { UTXOSet as AVMUTXOSet } from '@savannah-labs/savannahjs/dist/apis/avm/utxos';
 import { avalanche } from '@/Network/network';
-import { UTXOSet as PlatformUTXOSet } from 'avalanche/dist/apis/platformvm';
+import { UTXOSet as PlatformUTXOSet } from '@savannah-labs/savannahjs/dist/apis/platformvm';
 import { iHDWalletIndex } from '@/Wallet/types';
 import { bintools } from '@/common';
 import * as bip32 from 'bip32';

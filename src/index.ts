@@ -9,7 +9,7 @@ export * from './Wallet';
 import * as NetworkConstants from '@/Network/constants';
 import * as Utils from '@/utils';
 import Keystore from '@/Keystore/keystore';
-export { BN } from 'avalanche';
+export { BN } from '@savannah-labs/savannahjs';
 import Big from 'big.js';
 
 export * from '@/helpers';

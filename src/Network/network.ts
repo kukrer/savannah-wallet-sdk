@@ -1,7 +1,7 @@
-import { Avalanche } from 'avalanche/dist';
-import { AVMAPI } from 'avalanche/dist/apis/avm';
-import { InfoAPI } from 'avalanche/dist/apis/info';
-import { EVMAPI } from 'avalanche/dist/apis/evm';
+import { Avalanche } from '@savannah-labs/savannahjs/dist';
+import { AVMAPI } from '@savannah-labs/savannahjs/dist/apis/avm';
+import { InfoAPI } from '@savannah-labs/savannahjs/dist/apis/info';
+import { EVMAPI } from '@savannah-labs/savannahjs/dist/apis/evm';
 import Web3 from 'web3';
 import { DefaultConfig } from './constants';
 import { NetworkConfig, NetworkConfigRpc, NetworkProtocolType } from './types';

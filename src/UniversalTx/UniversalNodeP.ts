@@ -6,7 +6,7 @@ import {
     UniversalTxExportP,
     UniversalTxImportP,
 } from '@/UniversalTx/types';
-import { BN } from 'avalanche';
+import { BN } from '@savannah-labs/savannahjs';
 
 export default class UniversalNodeP extends UniversalNodeAbstract {
     constructor(balance: BN, feeExport: BN, feeImport: BN) {

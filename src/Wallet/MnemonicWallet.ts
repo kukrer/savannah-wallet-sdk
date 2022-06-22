@@ -2,13 +2,17 @@ import * as bip39 from 'bip39';
 import * as bip32 from 'bip32';
 import { EvmWallet } from './EvmWallet';
 import { UnsafeWallet, WalletNameType } from './types';
-import { Buffer } from 'avalanche';
+import { Buffer } from '@savannah-labs/savannahjs';
 import { FeeMarketEIP1559Transaction, Transaction } from '@ethereumjs/tx';
-import { Tx as AVMTx, UnsignedTx as AVMUnsignedTx } from 'avalanche/dist/apis/avm';
-import { Tx as PlatformTx, UnsignedTx as PlatformUnsignedTx } from 'avalanche/dist/apis/platformvm';
-import { KeyPair as AVMKeyPair, KeyChain as AVMKeyChain } from 'avalanche/dist/apis/avm/keychain';
-import { KeyChain as PlatformKeyChain } from 'avalanche/dist/apis/platformvm';
-import { UnsignedTx as EVMUnsignedTx, Tx as EVMTx, KeyPair as EVMKeyPair } from 'avalanche/dist/apis/evm';
+import { Tx as AVMTx, UnsignedTx as AVMUnsignedTx } from '@savannah-labs/savannahjs/dist/apis/avm';
+import { Tx as PlatformTx, UnsignedTx as PlatformUnsignedTx } from '@savannah-labs/savannahjs/dist/apis/platformvm';
+import { KeyPair as AVMKeyPair, KeyChain as AVMKeyChain } from '@savannah-labs/savannahjs/dist/apis/avm/keychain';
+import { KeyChain as PlatformKeyChain } from '@savannah-labs/savannahjs/dist/apis/platformvm';
+import {
+    UnsignedTx as EVMUnsignedTx,
+    Tx as EVMTx,
+    KeyPair as EVMKeyPair,
+} from '@savannah-labs/savannahjs/dist/apis/evm';
 import { digestMessage } from '@/utils';
 import { HDWalletAbstract } from '@/Wallet/HDWalletAbstract';
 import { bintools } from '@/common';

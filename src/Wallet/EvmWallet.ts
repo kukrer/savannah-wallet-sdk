@@ -1,4 +1,4 @@
-import { Buffer as BufferAvalanche } from 'avalanche';
+import { Buffer as BufferAvalanche } from '@savannah-labs/savannahjs';
 import { FeeMarketEIP1559Transaction, Transaction } from '@ethereumjs/tx';
 import { avalanche } from '@/Network/network';
 import {
@@ -6,7 +6,7 @@ import {
     KeyPair as EVMKeyPair,
     UnsignedTx as EVMUnsignedTx,
     Tx as EVMTx,
-} from 'avalanche/dist/apis/evm';
+} from '@savannah-labs/savannahjs/dist/apis/evm';
 import { EvmWalletReadonly } from '@/Wallet/EvmWalletReadonly';
 import { bintools } from '@/common';
 import { computePublicKey } from 'ethers/lib/utils';

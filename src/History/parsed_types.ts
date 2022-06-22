@@ -1,4 +1,4 @@
-import { BN } from 'avalanche';
+import { BN } from '@savannah-labs/savannahjs';
 import { ChainIdType } from '@/types';
 import { iAssetDescriptionClean } from '@/Asset/types';
 

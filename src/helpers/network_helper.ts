@@ -1,6 +1,6 @@
 import { NetworkConfig } from '@/Network/types';
 import axios from 'axios';
-import { Avalanche } from 'avalanche';
+import { Avalanche } from '@savannah-labs/savannahjs';
 
 export function wsUrlFromConfigX(config: NetworkConfig): string {
     let protocol = config.apiProtocol === 'http' ? 'ws' : 'wss';

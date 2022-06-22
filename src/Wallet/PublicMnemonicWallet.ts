@@ -1,7 +1,7 @@
 import { HDWalletAbstract } from '@/Wallet/HDWalletAbstract';
-import { UnsignedTx as EVMUnsignedTx, Tx as EVMTx } from 'avalanche/dist/apis/evm';
-import { UnsignedTx as PlatformUnsignedTx, Tx as PlatformTx } from 'avalanche/dist/apis/platformvm';
-import { UnsignedTx as AVMUnsignedTx, Tx as AVMTx } from 'avalanche/dist/apis/avm';
+import { UnsignedTx as EVMUnsignedTx, Tx as EVMTx } from '@savannah-labs/savannahjs/dist/apis/evm';
+import { UnsignedTx as PlatformUnsignedTx, Tx as PlatformTx } from '@savannah-labs/savannahjs/dist/apis/platformvm';
+import { UnsignedTx as AVMUnsignedTx, Tx as AVMTx } from '@savannah-labs/savannahjs/dist/apis/avm';
 import { Transaction } from '@ethereumjs/tx';
 import { WalletNameType } from '@/Wallet/types';
 import { EvmWallet } from '@/Wallet/EvmWallet';

@@ -1,7 +1,7 @@
 import { ITransactionDataEVM } from '@/History/raw_types';
 import { iHistoryEVMTx } from '@/History/parsed_types';
 import { bnToAvaxC } from '@/utils';
-import { BN } from 'avalanche';
+import { BN } from '@savannah-labs/savannahjs';
 
 export function getTransactionSummaryEVM(tx: ITransactionDataEVM, walletAddress: string): iHistoryEVMTx {
     let isSender = tx.fromAddr.toUpperCase() === walletAddress.toUpperCase();

@@ -1,7 +1,7 @@
-import { BN, Buffer as BufferAvalanche } from 'avalanche';
+import { BN, Buffer as BufferAvalanche } from '@savannah-labs/savannahjs';
 import { avalanche, web3 } from '@/Network/network';
 import { ethers } from 'ethers';
-import { KeyPair as EVMKeyPair } from 'avalanche/dist/apis/evm/keychain';
+import { KeyPair as EVMKeyPair } from '@savannah-labs/savannahjs/dist/apis/evm/keychain';
 import { bintools } from '@/common';
 import { computePublicKey, computeAddress } from 'ethers/lib/utils';
 

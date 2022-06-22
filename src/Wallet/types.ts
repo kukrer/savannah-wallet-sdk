@@ -1,6 +1,6 @@
-import { KeyPair as AVMKeyPair } from 'avalanche/dist/apis/avm';
+import { KeyPair as AVMKeyPair } from '@savannah-labs/savannahjs/dist/apis/avm';
 
-import { BN } from 'avalanche';
+import { BN } from '@savannah-labs/savannahjs';
 
 import { MnemonicWallet } from '@/Wallet/MnemonicWallet';
 import { SingletonWallet } from '@/Wallet/SingletonWallet';

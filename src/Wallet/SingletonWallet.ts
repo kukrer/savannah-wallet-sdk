@@ -1,16 +1,20 @@
 import { WalletProvider } from '@/Wallet/Wallet';
 import { UnsafeWallet, WalletNameType } from '@/Wallet/types';
 
-import { KeyChain as AVMKeyChain, UnsignedTx as AVMUnsignedTx, Tx as AVMTx } from 'avalanche/dist/apis/avm';
+import {
+    KeyChain as AVMKeyChain,
+    UnsignedTx as AVMUnsignedTx,
+    Tx as AVMTx,
+} from '@savannah-labs/savannahjs/dist/apis/avm';
 import {
     KeyChain as PlatformKeyChain,
     UnsignedTx as PlatformUnsignedTx,
     Tx as PlatformTx,
-} from 'avalanche/dist/apis/platformvm';
+} from '@savannah-labs/savannahjs/dist/apis/platformvm';
 import { avalanche, pChain, xChain } from '@/Network/network';
-import { Buffer as BufferAvalanche } from 'avalanche';
+import { Buffer as BufferAvalanche } from '@savannah-labs/savannahjs';
 import { EvmWallet } from '@/Wallet/EvmWallet';
-import { UnsignedTx, Tx, KeyPair as EVMKeyPair } from 'avalanche/dist/apis/evm';
+import { UnsignedTx, Tx, KeyPair as EVMKeyPair } from '@savannah-labs/savannahjs/dist/apis/evm';
 import { FeeMarketEIP1559Transaction, Transaction } from '@ethereumjs/tx';
 import { bintools } from '@/common';
 

@@ -1,8 +1,8 @@
 // If any of the outputs has a different chain ID, that's the destination chain
 // else return current chain
 import { iHistoryNftFamilyBalance, ITransactionData, UTXO } from '@/History';
-import { BN } from 'avalanche';
-import { AVMConstants } from 'avalanche/dist/apis/avm';
+import { BN } from '@savannah-labs/savannahjs';
+import { AVMConstants } from '@savannah-labs/savannahjs/dist/apis/avm';
 import { parseNftPayload } from '@/utils';
 
 /**
