@@ -1,5 +1,5 @@
 import { Buffer } from '@savannah-labs/savannahjs';
-import Erc20Token from '@/Asset/Erc20Token';
+import { Erc20Token } from '@/Asset/Erc20Token';
 
 export interface iAssetCache {
     [assetId: string]: iAssetDescriptionClean;

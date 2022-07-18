@@ -1,6 +1,6 @@
 import * as bip39 from 'bip39';
 import * as bip32 from 'bip32';
-import { EvmWallet } from './EvmWallet';
+import { EvmWallet } from './EVM/EvmWallet';
 import { UnsafeWallet, WalletNameType } from './types';
 import { Buffer } from '@savannah-labs/savannahjs';
 import { FeeMarketEIP1559Transaction, Transaction } from '@ethereumjs/tx';
@@ -13,17 +13,17 @@ import {
     Tx as EVMTx,
     KeyPair as EVMKeyPair,
 } from '@savannah-labs/savannahjs/dist/apis/evm';
-import { digestMessage } from '@/utils';
+import { CypherAES, digestMessage } from '@/utils';
 import { HDWalletAbstract } from '@/Wallet/HDWalletAbstract';
 import { bintools } from '@/common';
 import { getAccountPathAvalanche, getAccountPathEVM } from '@/Wallet/helpers/derivationHelper';
-import { avalanche } from '@/Network/network';
+import { TypedDataV1, TypedMessage } from '@metamask/eth-sig-util';
 
 //TODO: Should extend public mnemonic wallet
 export class MnemonicWallet extends HDWalletAbstract implements UnsafeWallet {
     evmWallet: EvmWallet;
     type: WalletNameType;
-    mnemonic: string;
+    private mnemonicCypher: CypherAES;
     accountIndex: number;
 
     private ethAccountKey: bip32.BIP32Interface;
@@ -47,7 +47,7 @@ export class MnemonicWallet extends HDWalletAbstract implements UnsafeWallet {
         let evmWallet = new EvmWallet(ethKey!);
 
         this.accountIndex = account;
-        this.mnemonic = mnemonic;
+        this.mnemonicCypher = new CypherAES(mnemonic);
         this.evmWallet = evmWallet;
     }
 
@@ -56,6 +56,13 @@ export class MnemonicWallet extends HDWalletAbstract implements UnsafeWallet {
      */
     public getEvmPrivateKeyHex(): string {
         return this.evmWallet.getPrivateKeyHex();
+    }
+
+    /**
+     * Return the mnemonic phrase for this wallet.
+     */
+    public getMnemonic(): string {
+        return this.mnemonicCypher.getValue();
     }
 
     /**
@@ -153,5 +160,39 @@ export class MnemonicWallet extends HDWalletAbstract implements UnsafeWallet {
         let signed = key.sign(digestBuff);
 
         return bintools.cb58Encode(signed);
+    }
+
+    /**
+     * This function is equivalent to the eth_sign Ethereum JSON-RPC method as specified in EIP-1417,
+     * as well as the MetaMask's personal_sign method.
+     * @remarks Signs using the C chain address.
+     * @param data The hex data to sign
+     */
+    async personalSign(data: string): Promise<string> {
+        return this.evmWallet.personalSign(data);
+    }
+
+    /**
+     * V1 is based upon an early version of EIP-712 that lacked some later security improvements, and should generally be neglected in favor of later versions.
+     * @param data The typed data to sign.
+     * */
+    async signTypedData_V1(data: TypedDataV1): Promise<string> {
+        return this.evmWallet.signTypedData_V1(data);
+    }
+
+    /**
+     * V3 is based on EIP-712, except that arrays and recursive data structures are not supported.
+     * @param data The typed data to sign.
+     */
+    async signTypedData_V3(data: TypedMessage<any>): Promise<string> {
+        return this.evmWallet.signTypedData_V3(data);
+    }
+
+    /**
+     * V4 is based on EIP-712, and includes full support of arrays and recursive data structures.
+     * @param data The typed data to sign.
+     */
+    async signTypedData_V4(data: TypedMessage<any>): Promise<string> {
+        return this.evmWallet.signTypedData_V4(data);
     }
 }

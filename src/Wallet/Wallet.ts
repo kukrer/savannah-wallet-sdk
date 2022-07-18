@@ -2,6 +2,7 @@ import {
     AssetBalanceP,
     AssetBalanceRawX,
     AssetBalanceX,
+    BTCNetworkType,
     ERC20Balance,
     ExportChainsC,
     ExportChainsP,
@@ -19,6 +20,7 @@ import {
     buildEvmExportTransaction,
     buildEvmTransferEIP1559Tx,
     buildEvmTransferErc20Tx,
+    buildEvmTransferErc721Tx,
     buildEvmTransferNativeTx,
     buildMintNftTx,
     buildPlatformExportTransaction,
@@ -28,7 +30,7 @@ import {
 import { BN, Buffer } from '@savannah-labs/savannahjs';
 import { FeeMarketEIP1559Transaction, Transaction } from '@ethereumjs/tx';
 import { activeNetwork, avalanche, cChain, pChain, web3, xChain } from '@/Network/network';
-import { EvmWallet } from '@/Wallet/EvmWallet';
+import { EvmWallet } from '@/Wallet/EVM/EvmWallet';
 
 import {
     avmGetAllUTXOs,
@@ -66,21 +68,11 @@ import { getAssetDescription } from '@/Asset/Assets';
 import { getErc20Token } from '@/Asset/Erc20';
 import { NO_NETWORK } from '@/errors';
 import { avaxCtoX, bnToLocaleString, getTxFeeP, getTxFeeX, waitTxC, waitTxEvm, waitTxP, waitTxX } from '@/utils';
-import { EvmWalletReadonly } from '@/Wallet/EvmWalletReadonly';
+import { EvmWalletReadonly } from '@/Wallet/EVM/EvmWalletReadonly';
 import EventEmitter from 'events';
-import {
-    filterDuplicateTransactions,
-    getAddressHistory,
-    getAddressHistoryEVM,
-    getTransactionSummary,
-    getTransactionSummaryEVM,
-    getTx,
-    getTxEvm,
-    HistoryItemType,
-    ITransactionData,
-} from '@/History';
+import { getTransactionSummary, getTransactionSummaryEVM, HistoryItemType } from '@/History';
 import { bintools } from '@/common';
-import { ChainIdType } from '@/types';
+import { ChainIdType } from '@/common';
 import {
     createGraphForC,
     createGraphForP,
@@ -101,6 +93,16 @@ import {
     estimateImportGasFeeFromMockTx,
     getBaseFeeRecommended,
 } from '@/helpers/gas_helper';
+import { getErc20History, getNormalHistory } from '@/Explorer/snowtrace';
+import {
+    filterDuplicateOrtelius,
+    getAddressHistory,
+    getAddressHistoryEVM,
+    getTx,
+    getTxEvm,
+    OrteliusAvalancheTx,
+} from '@/Explorer';
+import { TypedDataV1, TypedMessage } from '@metamask/eth-sig-util';
 
 export abstract class WalletProvider {
     abstract type: WalletNameType;
@@ -138,6 +140,11 @@ export abstract class WalletProvider {
     abstract getAllAddressesXSync(): string[];
     abstract getAllAddressesP(): Promise<string[]>;
     abstract getAllAddressesPSync(): string[];
+
+    abstract personalSign(data: string): Promise<string>;
+    abstract signTypedData_V1(data: TypedDataV1): Promise<string>;
+    abstract signTypedData_V3(data: TypedMessage<any>): Promise<string>;
+    abstract signTypedData_V4(data: TypedMessage<any>): Promise<string>;
 
     protected constructor() {
         networkEvents.on('network_change', this.onNetworkChange.bind(this));
@@ -210,6 +217,13 @@ export abstract class WalletProvider {
 
     public getEvmAddressBech() {
         return this.evmWallet.getAddressBech32();
+    }
+
+    /**
+     * Returns the BTC address of the C-Chain public key.
+     */
+    public getAddressBTC(type: BTCNetworkType): string {
+        return this.evmWallet.getAddressBTC(type);
     }
 
     /**
@@ -312,6 +326,19 @@ export abstract class WalletProvider {
     }
 
     /**
+     * Makes a `safeTransferFrom` call on a ERC721 contract.
+     * @param to Hex address to transfer the NFT to.
+     * @param tokenID ID of the token to transfer inside the ERC71 family.
+     * @param gasPrice Gas price in WEI format
+     * @param gasLimit Gas limit
+     * @param contractAddress Contract address of the ERC721 token
+     */
+    async sendErc721(contractAddress: string, to: string, tokenID: number, gasPrice: BN, gasLimit: number) {
+        const tx = await buildEvmTransferErc721Tx(this.getAddressC(), to, gasPrice, gasLimit, contractAddress, tokenID);
+        return await this.issueEvmTx(tx);
+    }
+
+    /**
      * Estimate the gas needed for an ERC20 Transfer transaction
      * @param contractAddress The ERC20 contract address
      * @param to Address receiving the tokens
@@ -320,6 +347,16 @@ export abstract class WalletProvider {
     async estimateErc20Gas(contractAddress: string, to: string, amount: BN): Promise<number> {
         let from = this.getAddressC();
         return await estimateErc20Gas(contractAddress, from, to, amount);
+    }
+
+    /**
+     * Estimate the gas needed for an ERC721 `safeTransferFrom` transaction
+     * @param contractAddress The ERC20 contract address
+     * @param to Address receiving the tokens
+     * @param tokenID ID of the token to transfer inside the ERC71 family.
+     */
+    async estimateErc721TransferGasLimit(contractAddress: string, to: string, tokenID: number) {
+        return this.evmWallet.estimateErc721TransferGasLimit(contractAddress, to, tokenID);
     }
 
     /**
@@ -836,6 +873,30 @@ export abstract class WalletProvider {
     }
 
     /**
+     * Fetches X-Chain atomic utxos from all source networks and returns them as one set.
+     */
+    async getAllAtomicUTXOsX() {
+        const utxos = await Promise.all([this.getAtomicUTXOsX('P'), this.getAtomicUTXOsX('C')]);
+        return utxos[0].merge(utxos[1]);
+    }
+
+    /**
+     * Fetches P-Chain atomic utxos from all source networks and returns them as one set.
+     */
+    async getAllAtomicUTXOsP() {
+        const utxos = await Promise.all([this.getAtomicUTXOsP('X'), this.getAtomicUTXOsP('C')]);
+        return utxos[0].merge(utxos[1]);
+    }
+
+    /**
+     * Fetches C-Chain atomic utxos from all source networks and returns them as one set.
+     */
+    async getAllAtomicUTXOsC() {
+        const utxos = await Promise.all([this.getAtomicUTXOsC('X'), this.getAtomicUTXOsC('P')]);
+        return utxos[0].merge(utxos[1]);
+    }
+
+    /**
      * Imports atomic X chain UTXOs to the current active X chain address
      * @param sourceChain The chain to import from, either `P` or `C`
      */
@@ -1174,24 +1235,54 @@ export abstract class WalletProvider {
         }
     }
 
-    async getHistoryX(limit = 0): Promise<ITransactionData[]> {
+    async getHistoryX(limit = 0): Promise<OrteliusAvalancheTx[]> {
         let addrs = await this.getAllAddressesX();
         return await getAddressHistory(addrs, limit, xChain.getBlockchainID());
     }
 
-    async getHistoryP(limit = 0): Promise<ITransactionData[]> {
+    async getHistoryP(limit = 0): Promise<OrteliusAvalancheTx[]> {
         let addrs = await this.getAllAddressesP();
         return await getAddressHistory(addrs, limit, pChain.getBlockchainID());
     }
 
-    async getHistoryC(limit = 0): Promise<ITransactionData[]> {
+    /**
+     * Returns atomic history for this wallet on the C chain.
+     * @remarks Excludes EVM transactions.
+     * @param limit
+     */
+    async getHistoryC(limit = 0): Promise<OrteliusAvalancheTx[]> {
         let addrs = [this.getEvmAddressBech(), ...(await this.getAllAddressesX())];
         return await getAddressHistory(addrs, limit, cChain.getBlockchainID());
     }
 
+    /**
+     * Returns history for this wallet on the C chain.
+     * @remarks Excludes atomic C chain import/export transactions.
+     */
     async getHistoryEVM() {
         let addr = this.getAddressC();
         return await getAddressHistoryEVM(addr);
+    }
+
+    /**
+     * Returns the erc 20 activity for this wallet's C chain address. Uses Snowtrace APIs.
+     * @param offset Number of items per page. Optional.
+     * @param page If provided will paginate the results. Optional.
+     * @param contractAddress Filter activity by the ERC20 contract address. Optional.
+     */
+    async getHistoryERC20(page?: number, offset?: number, contractAddress?: string) {
+        const erc20Hist = await getErc20History(this.getAddressC(), activeNetwork, page, offset, contractAddress);
+        return erc20Hist;
+    }
+
+    /**
+     * Get a list of 'Normal' Transactions for wallet's C chain address. Uses Snowtrace APIs.
+     * @param offset Number of items per page. Optional.
+     * @param page If provided will paginate the results. Optional.
+     */
+    async getHistoryNormalTx(page?: number, offset?: number) {
+        const normalHist = await getNormalHistory(this.getAddressC(), activeNetwork, page, offset);
+        return normalHist;
     }
 
     async getHistory(limit: number = 0): Promise<HistoryItemType[]> {
@@ -1201,7 +1292,7 @@ export abstract class WalletProvider {
             this.getHistoryC(limit),
         ]);
 
-        let txsXPC = filterDuplicateTransactions(txsX.concat(txsP, txsC));
+        let txsXPC = filterDuplicateOrtelius(txsX.concat(txsP, txsC));
 
         let txsEVM = await this.getHistoryEVM();
 
@@ -1259,5 +1350,13 @@ export abstract class WalletProvider {
 
         let rawData = await getTxEvm(txHash);
         return getTransactionSummaryEVM(rawData, addrC);
+    }
+
+    async parseOrteliusTx(tx: OrteliusAvalancheTx): Promise<HistoryItemType> {
+        let addrsX = await this.getAllAddressesX();
+        let addrBechC = this.getEvmAddressBech();
+        let addrs = [...addrsX, addrBechC];
+        let addrC = this.getAddressC();
+        return await getTransactionSummary(tx, addrs, addrC);
     }
 }

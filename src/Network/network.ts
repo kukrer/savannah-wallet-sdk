@@ -5,7 +5,6 @@ import { EVMAPI } from '@savannah-labs/savannahjs/dist/apis/evm';
 import Web3 from 'web3';
 import { DefaultConfig } from './constants';
 import { NetworkConfig, NetworkConfigRpc, NetworkProtocolType } from './types';
-import { AxiosInstance } from 'axios';
 import { getRpcC, getRpcP, getRpcX } from './helpers/rpcFromConfig';
 import URL from 'url';
 import { bintools } from '@/common';
@@ -16,6 +15,11 @@ import {
     getNetworkIdFromURL,
 } from '@/helpers/network_helper';
 
+import { FetchHttpProvider } from '@/utils/FetchHTTPProvider';
+import { getEthersJsonRpcProvider } from '@/Network/getEthersProvider';
+import { ethers } from 'ethers';
+import { HttpClient } from '@/helpers/http_client';
+
 export const avalanche: Avalanche = createAvalancheProvider(DefaultConfig);
 
 export const xChain: AVMAPI = avalanche.XChain();
@@ -24,16 +28,17 @@ export const pChain = avalanche.PChain();
 export const infoApi: InfoAPI = avalanche.Info();
 
 function getProviderFromUrl(url: string, credentials = false) {
-    return new Web3.providers.HttpProvider(url, {
+    return new FetchHttpProvider(url, {
         timeout: 20000,
         withCredentials: credentials,
     });
 }
 
 const rpcUrl = getRpcC(DefaultConfig);
-export const web3 = new Web3(getProviderFromUrl(rpcUrl, true));
-
-export let explorer_api: AxiosInstance | null = null;
+export const web3 = new Web3(getProviderFromUrl(rpcUrl, true) as any);
+// JSON RPC Ethers provider
+export let ethersProvider: ethers.providers.JsonRpcProvider = getEthersJsonRpcProvider(DefaultConfig);
+export let explorer_api: HttpClient | null = null;
 export let activeNetwork: NetworkConfig = DefaultConfig;
 
 /**
@@ -88,7 +93,9 @@ export function setRpcNetwork(conf: NetworkConfig, credentials = true): void {
     }
 
     let rpcUrl = getRpcC(conf);
-    web3.setProvider(getProviderFromUrl(rpcUrl, credentials));
+    web3.setProvider(getProviderFromUrl(rpcUrl, credentials) as any);
+    // Update ethers provider
+    ethersProvider = getEthersJsonRpcProvider(conf);
 
     activeNetwork = conf;
 }
@@ -113,7 +120,7 @@ export async function getConfigFromUrl(url: string): Promise<NetworkConfig> {
 
     let connection = new Avalanche(urlObj.hostname, parseInt(portStr), protocol, netID);
     // TODO: Use a helper for this
-    let connectionEvm = new Web3(urlObj.href + 'ext/bc/C/rpc');
+    let connectionEvm = new Web3(getProviderFromUrl(urlObj.href + 'ext/bc/C/rpc') as any);
 
     let infoApi = connection.Info();
     let xApi = connection.XChain();
